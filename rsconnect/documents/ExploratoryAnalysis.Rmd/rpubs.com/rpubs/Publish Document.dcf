@@ -1,0 +1,8 @@
+name: Publish Document
+title:
+account: rpubs
+server: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/295924/758b7b6b20dc40dcaeacca76cef65841
+bundleId: https://api.rpubs.com/api/v1/document/295924/758b7b6b20dc40dcaeacca76cef65841
+url: http://rpubs.com/abhishek08/295924
+when: 1501609918.65605

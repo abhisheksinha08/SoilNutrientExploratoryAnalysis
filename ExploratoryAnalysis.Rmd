@@ -1,0 +1,96 @@
+---
+title: "Soil Nutrient Exploratory Analysis"
+author: "Abhishek Sinha"
+date: "8/1/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2, quietly = T)
+library(dplyr, quietly = T)
+library(data.table, quietly = T)
+```
+
+##Data Loading
+
+Loading data and converting strings to Factors
+```{r}
+system.time(soil.data <- fread("haryana_soil_nutrient.csv", header = T, stringsAsFactors = T))
+```
+
+##Basic Information
+
+Structure of data
+```{r}
+str(soil.data)
+```
+
+Summary of data
+
+```{r}
+summary(soil.data)
+```
+
+##Missing Data
+
+Find missing values in each column
+
+```{r}
+sapply(soil.data, function(x){sum(is.na(x))})
+```
+
+Find missing percentange of each column
+
+```{r}
+rows_tot <- nrow(soil.data)
+sapply(soil.data, function(x){round(100*sum(is.na(x))/rows_tot, digits = 2)})
+
+```
+
+Boron, Nitrogen has more than 95% data missing, while Copper has 51% data missing. Problem is data for Nitrogen is missing.
+
+NOTE: **Nitrogen** is one of the most important component in soil and missing data will create an issue for us.
+
+###More details on Nitrogen
+
+Block Wise
+```{r}
+nitrogen.missing <- is.na(soil.data$Nitrogen)
+table(paste0(soil.data$DistrictName, " - ",soil.data$BlockName), nitrogen.missing)
+```
+
+
+District Wise
+
+```{r}
+table(soil.data$DistrictName, nitrogen.missing)
+```
+
+More Details
+
+```{r}
+nitrogen.data <- subset(soil.data, is.na(soil.data$Nitrogen)==FALSE)
+nitrogen.data$Identity<-1
+agg.district <-aggregate(nitrogen.data$Identity ~ nitrogen.data$DistrictName,data=nitrogen.data, FUN=sum)
+
+qplot(agg.district$`nitrogen.data$DistrictName`, agg.district$`nitrogen.data$Identity`, data=agg.district, xlab = "District", ylab="Num of Entries with Nitrogen Data", col=`nitrogen.data$DistrictName`) + theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+This clearly shows that data is entered only in Rewari, Mewat and Faridabad.
+
+
+##Electrical Conductivity
+
+```{r}
+ggplot(soil.data) + aes(x = DistrictName, y=ElectricalConductivity, fill=DistrictName) + geom_bar(stat = "summary", fun.y="mean")+ theme(axis.text.x = element_text(angle = 60, hjust = 1)) + xlab("District") + ylab("Electrical Conductivity")
+
+```
+
+High electrical conductivity of soil can be associated with more moisture in the soil. Palwal, Hisar, Faridabad and Jhajjar have high water content in the soil. 
+
+Faridabad is close to Yamuna, so water content will be high. What about the other districts?  
+* Good Irrigation  
+* More Rainfall  
+
+Need to find more details.
