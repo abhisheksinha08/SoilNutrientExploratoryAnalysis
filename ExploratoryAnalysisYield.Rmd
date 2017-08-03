@@ -1,0 +1,138 @@
+---
+title: "Exploratory Data Analysis on Crop Yield in Haryana"
+author: "Abhishek Sinha"
+date: "8/3/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2, quietly = T)
+library(dplyr, quietly = T)
+library(data.table, quietly = T)
+library(tidyr, quietly = T)
+```
+
+## Load Data and basic structure and summary
+
+```{r}
+yield.data <- fread("apy.csv", header = T, stringsAsFactors = T)
+
+str(yield.data)
+```
+
+Summary
+
+```{r}
+summary(yield.data)
+```
+
+
+## Looking at Haryana Data Only
+
+```{r}
+haryana.data <- subset(yield.data, yield.data$State_Name=='Haryana')
+print(paste0("The number of rows: ", nrow(haryana.data)))
+```
+
+
+## Finding the crops with maximum yield
+
+```{r}
+prod.crop <- aggregate(haryana.data$Production ~ haryana.data$Crop, FUN = mean)
+names(prod.crop) <- c("Crop","Production")
+top.10.prod.crop <- arrange(prod.crop, -prod.crop$Production) %>% head(10)
+top.10.prod.crop$Crop <- as.character(top.10.prod.crop$Crop)
+print(top.10.prod.crop)
+```
+
+```{r}
+ggplot(data = top.10.prod.crop) + aes( x=reorder(Crop, -Production), y = Production, fill=Crop) + geom_bar(stat = "identity") + xlab("Crops") + ylab("Production") + ggtitle("Mean Production by Crop - Top 10 only")
+```
+
+
+##Wheat
+
+```{r}
+wheat.data <- haryana.data %>% filter(haryana.data$Crop=='Wheat') 
+wheat.prod.year <- aggregate(wheat.data$Production ~ wheat.data$Crop_Year, FUN = sum)
+names(wheat.prod.year) <- c("Year","Production")
+
+ggplot(data = wheat.prod.year) + aes( x=Year, y = Production, fill=Year) + geom_bar(stat = "identity") + xlab("Year") + ylab("Production") + ggtitle("Total Production by Year (Wheat)")
+```
+
+
+##Sugarcane
+
+```{r}
+sugarcane.data <- haryana.data %>% filter(haryana.data$Crop=='Sugarcane') 
+prod.year <- aggregate(sugarcane.data$Production ~ sugarcane.data$Crop_Year, FUN = sum)
+names(prod.year) <- c("Year","Production")
+
+ggplot(data = prod.year) + aes( x=Year, y = Production, fill=Year) + geom_bar(stat = "identity") + xlab("Year") + ylab("Production") + ggtitle("Total Production by Year (Sugarcane)")
+```
+
+
+##Rice
+
+```{r}
+rice.data <- haryana.data %>% filter(haryana.data$Crop=='Rice') 
+prod.year <- aggregate(rice.data$Production ~ rice.data$Crop_Year, FUN = sum)
+names(prod.year) <- c("Year","Production")
+
+ggplot(data = prod.year) + aes( x=Year, y = Production, fill=Year) + geom_bar(stat = "identity") + xlab("Year") + ylab("Production") + ggtitle("Total Production by Year (Rice)")
+```
+
+##Cotton
+
+```{r}
+cotton.data <- haryana.data %>% filter(haryana.data$Crop=='Cotton(lint)') 
+prod.year <- aggregate(cotton.data$Production ~ cotton.data$Crop_Year, FUN = sum)
+names(prod.year) <- c("Year","Production")
+
+ggplot(data = prod.year) + aes( x=Year, y = Production, fill=Year) + geom_bar(stat = "identity") + xlab("Year") + ylab("Production") + ggtitle("Total Production by Year (Cotton)")
+```
+
+
+##Crop Summary
+
+We can select Wheat, Sugarcane, Rice and Cotton as the main crops to target.
+
+
+
+----------
+
+
+##Area Analysis
+
+```{r}
+
+top4crops <- c("Wheat","Sugarcane","Rice","Cotton(lint)")
+top4crops.data <- haryana.data %>% filter(haryana.data$Crop %in% top4crops)
+
+mean.area.crop <- aggregate(top4crops.data$Area ~ top4crops.data$Crop, FUN=mean)
+names(mean.area.crop) <- c("Crop","Area_acres")
+mean.area.crop
+```
+
+```{r}
+qplot(mean.area.crop, x=mean.area.crop$Crop, y=mean.area.crop$Area_acres, xlab = "Crop", ylab="Area in Acres")
+```
+
+Area used over the years
+
+```{r}
+mean.area.crop <- aggregate(top4crops.data$Area ~ top4crops.data$Crop + top4crops.data$Crop_Year, FUN=sum)
+names(mean.area.crop) <- c("Crop","Year","Area_acres")
+ggplot(mean.area.crop) + aes(x=Year, y=Area_acres, fill=Year) + facet_grid(.~Crop) + geom_bar(stat = "identity") + ggtitle("Area used by crop") + xlab("Year") + ylab("Area")
+```
+
+Production over the years
+
+```{r}
+mean.prod.crop <- aggregate(top4crops.data$Production ~ top4crops.data$Crop + top4crops.data$Crop_Year, FUN=sum)
+names(mean.prod.crop) <- c("Crop","Year","Production")
+ggplot(mean.prod.crop) + aes(x=Year, y=Production, fill=Year) + facet_grid(.~Crop) + geom_bar(stat = "identity") + ggtitle("Crop Production") + xlab("Year") + ylab("Production")
+```
+
+One interesting thing I can see is crop production has increased over year but similarly production area has also increased. Even though there has been some excellent advances in agriculture in the last decade, there is no significant increase in yield.

@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2, quietly = T)
 library(dplyr, quietly = T)
 library(data.table, quietly = T)
+library(tidyr, quietly = T)
 ```
 
 ##Data Loading
@@ -79,6 +80,14 @@ qplot(agg.district$`nitrogen.data$DistrictName`, agg.district$`nitrogen.data$Ide
 
 This clearly shows that data is entered only in Rewari, Mewat and Faridabad.
 
+##Year Details
+
+```{r}
+tmp<-as.character(soil.data$SampleNo)
+tmp1<-as.data.frame(tmp) %>% separate(tmp, into = c("A","SampleYear","C"), sep = "/")
+soil.data$SampleYear <- tmp1$SampleYear
+table(soil.data$SampleYear)
+```
 
 ##Electrical Conductivity
 
@@ -94,3 +103,5 @@ Faridabad is close to Yamuna, so water content will be high. What about the othe
 * More Rainfall  
 
 Need to find more details.
+
+
